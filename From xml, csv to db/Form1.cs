@@ -13,6 +13,7 @@ using System.Data.SqlClient;
 using static System.Net.WebRequestMethods;
 using System.Diagnostics;
 using System.Data.SQLite;
+using System.Reflection.Emit;
 
 namespace From_xml__csv_to_db
 {
@@ -28,7 +29,7 @@ namespace From_xml__csv_to_db
         private void button1_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.InitialDirectory = "c:\\";
+            openFileDialog.InitialDirectory = "D:\\Dev\\db_update\\";
             openFileDialog.Filter = "xml files (*.xml)|*.xml|csv files (*.csv)|*.csv|All files (*.*)|*.*";
             openFileDialog.FilterIndex = 2;
             openFileDialog.RestoreDirectory = true;
@@ -37,6 +38,47 @@ namespace From_xml__csv_to_db
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
                 sourceFiles = openFileDialog.FileNames;          
+            }
+            DataSet ds = new DataSet();
+
+            foreach (string file in sourceFiles)
+            {
+                if (Path.GetExtension(file).ToLower() == ".xml")
+                {
+                    ds.ReadXml(file);
+                }
+                else if (Path.GetExtension(file).ToLower() == ".csv")
+                {
+                    DataTable table = new DataTable();
+                    using (StreamReader reader = new StreamReader(file))
+                    {
+                        string[] headers = reader.ReadLine().Split(',');
+                        foreach (string header in headers)
+                        {
+                            table.Columns.Add(header);
+                        }
+
+                        while (!reader.EndOfStream)
+                        {
+                            string[] values = reader.ReadLine().Split(',');
+                            DataRow row = table.NewRow();
+                            for (int i = 0; i < values.Length; i++)
+                            {
+                                row[i] = values[i];
+                            }
+                            table.Rows.Add(row);
+                        }
+                    }
+                    ds.Tables.Add(table);
+                }
+                // Получите список столбцов в текущей таблице
+                foreach (DataTable table in ds.Tables)
+                {
+                    string[] columnNames = table.Columns.Cast<DataColumn>().Select(c => c.ColumnName).ToArray();
+
+                    // Выведите названия столбцов в лейбл
+                    label1.Text += string.Join(", ", columnNames);
+                }
             }
         }
 

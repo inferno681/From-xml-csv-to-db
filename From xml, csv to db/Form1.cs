@@ -21,6 +21,9 @@ namespace From_xml__csv_to_db
     {
         string[] sourceFiles;
         string dbFile;
+        List<string> columnNames = new List<string>();
+        List<string> tableNames = new List<string>();
+        DataSet ds = new DataSet();
         public Form1()
         {
             InitializeComponent();
@@ -31,15 +34,15 @@ namespace From_xml__csv_to_db
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.InitialDirectory = "D:\\Dev\\db_update\\";
             openFileDialog.Filter = "xml files (*.xml)|*.xml|csv files (*.csv)|*.csv|All files (*.*)|*.*";
-            openFileDialog.FilterIndex = 2;
+            openFileDialog.FilterIndex = 1;
             openFileDialog.RestoreDirectory = true;
             openFileDialog.Multiselect = true;
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                sourceFiles = openFileDialog.FileNames;          
+                sourceFiles = openFileDialog.FileNames;
             }
-            DataSet ds = new DataSet();
+
 
             foreach (string file in sourceFiles)
             {
@@ -71,21 +74,21 @@ namespace From_xml__csv_to_db
                     }
                     ds.Tables.Add(table);
                 }
-                // Получите список столбцов в текущей таблице
                 foreach (DataTable table in ds.Tables)
                 {
-                    string[] columnNames = table.Columns.Cast<DataColumn>().Select(c => c.ColumnName).ToArray();
 
-                    // Выведите названия столбцов в лейбл
-                    label1.Text += string.Join(", ", columnNames);
+                    columnNames.AddRange(table.Columns.Cast<DataColumn>().Select(c => c.ColumnName).ToArray());
+
                 }
+
             }
+            label1.Text += string.Join(",/n", columnNames.Distinct());
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.InitialDirectory = "c:\\";
+            openFileDialog.InitialDirectory = "D:\\Dev\\db_update\\";
             openFileDialog.Filter = "sqlite files (*.db)|*.db|All files (*.*)|*.*";
             openFileDialog.FilterIndex = 1;
             openFileDialog.RestoreDirectory = true;
@@ -95,6 +98,13 @@ namespace From_xml__csv_to_db
             {
                 dbFile = openFileDialog.FileName;
             }
+            
+             label2.Text = string.Join(",/n", SQLiteRequestToList(dbFile, "SELECT name FROM sqlite_master WHERE type = 'table';"));
+
+                    
+
+                
+            
         }
 
         private void button3_Click(object sender, EventArgs e)
@@ -110,39 +120,7 @@ namespace From_xml__csv_to_db
                 return;
             }
 
-            DataSet ds = new DataSet();
 
-            foreach (string file in sourceFiles)
-            {
-                if (Path.GetExtension(file).ToLower() == ".xml")
-                {
-                    ds.ReadXml(file);
-                }
-                else if (Path.GetExtension(file).ToLower() == ".csv")
-                {
-                    DataTable table = new DataTable();
-                    using (StreamReader reader = new StreamReader(file))
-                    {
-                        string[] headers = reader.ReadLine().Split(',');
-                        foreach (string header in headers)
-                        {
-                            table.Columns.Add(header);
-                        }
-
-                        while (!reader.EndOfStream)
-                        {
-                            string[] values = reader.ReadLine().Split(',');
-                            DataRow row = table.NewRow();
-                            for (int i = 0; i < values.Length; i++)
-                            {
-                                row[i] = values[i];
-                            }
-                            table.Rows.Add(row);
-                        }
-                    }
-                    ds.Tables.Add(table);
-                }                
-            }
             using (var connection = new SQLiteConnection($"Data Source={dbFile};Version=3;"))
             {
                 connection.Open();
@@ -167,6 +145,27 @@ namespace From_xml__csv_to_db
                     }
                 }
             }
+        }
+        static List<string> SQLiteRequestToList(string dataBase, string SQLRequest)
+        {
+            List<string> SQLiteList = new List<string>();
+            using (var connection = new SQLiteConnection($"Data Source={dataBase};Version=3;"))
+            {
+                connection.Open();
+                using (SQLiteCommand command = new SQLiteCommand(SQLRequest, connection))
+                {
+                    using (SQLiteDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            SQLiteList.Add(reader.GetString(0));
+                        }
+
+                    }
+
+                }
+            }
+            return SQLiteList;
         }
     }
 }

@@ -21,6 +21,7 @@ namespace From_xml__csv_to_db
     {
         string[] sourceFiles;
         string dbFile;
+        string tableName;
         List<string> columnNames = new List<string>();
         List<string> tableNames = new List<string>();
         DataSet ds = new DataSet();
@@ -31,17 +32,20 @@ namespace From_xml__csv_to_db
 
         private void button1_Click(object sender, EventArgs e)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.InitialDirectory = "D:\\Dev\\db_update\\";
-            openFileDialog.Filter = "xml files (*.xml)|*.xml|csv files (*.csv)|*.csv|All files (*.*)|*.*";
-            openFileDialog.FilterIndex = 1;
-            openFileDialog.RestoreDirectory = true;
-            openFileDialog.Multiselect = true;
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                InitialDirectory = "D:\\Dev\\db_update\\",
+                Filter = "xml files (*.xml)|*.xml|csv files (*.csv)|*.csv|All files (*.*)|*.*",
+                FilterIndex = 1,
+                RestoreDirectory = true,
+                Multiselect = true
+            };
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
                 sourceFiles = openFileDialog.FileNames;
             }
+            listBox2.Items.Clear();
 
 
             foreach (string file in sourceFiles)
@@ -82,28 +86,35 @@ namespace From_xml__csv_to_db
                 }
 
             }
-            label1.Text += string.Join(",/n", columnNames.Distinct());
+            listBox2.Items.AddRange(columnNames.Distinct().ToArray());
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.InitialDirectory = "D:\\Dev\\db_update\\";
-            openFileDialog.Filter = "sqlite files (*.db)|*.db|All files (*.*)|*.*";
-            openFileDialog.FilterIndex = 1;
-            openFileDialog.RestoreDirectory = true;
-            openFileDialog.Multiselect = false;
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                InitialDirectory = "D:\\Dev\\db_update\\",
+                Filter = "sqlite files (*.db)|*.db|All files (*.*)|*.*",
+                FilterIndex = 1,
+                RestoreDirectory = true,
+                Multiselect = false
+            };
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
+                listBox1.Items.Clear();
                 dbFile = openFileDialog.FileName;
             }
-            
-             label2.Text = string.Join(",/n", SQLiteRequestToList(dbFile, "SELECT name FROM sqlite_master WHERE type = 'table';"));
+            tableNames = SQLiteRequestToList(dbFile, "SELECT name FROM sqlite_master WHERE type = 'table';");
+            listBox1.Items.AddRange(tableNames.ToArray());
 
-                    
 
-                
+
+
+
+
+
+
             
         }
 
@@ -127,7 +138,7 @@ namespace From_xml__csv_to_db
 
                 foreach (DataTable table in ds.Tables)
                 {
-                    var insertCommand = new SQLiteCommand($"INSERT INTO {table.TableName} VALUES ({string.Join(", ", table.Columns.Cast<DataColumn>().Select(c => $"@p{c.Ordinal}"))})", connection);
+                    var insertCommand = new SQLiteCommand($"INSERT INTO {tableName} ({string.Join(", ", listBox3.Items)}) VALUES ({string.Join(", ", listBox3.Items.Cast<DataColumn>().Select(c => $"@p{c.Ordinal}"))})", connection);
 
                     for (int i = 0; i < table.Columns.Count; i++)
                     {
@@ -146,7 +157,7 @@ namespace From_xml__csv_to_db
                 }
             }
         }
-        static List<string> SQLiteRequestToList(string dataBase, string SQLRequest)
+        static List<string> SQLiteRequestToList(string dataBase, string SQLRequest, int row = 0)
         {
             List<string> SQLiteList = new List<string>();
             using (var connection = new SQLiteConnection($"Data Source={dataBase};Version=3;"))
@@ -158,7 +169,7 @@ namespace From_xml__csv_to_db
                     {
                         while (reader.Read())
                         {
-                            SQLiteList.Add(reader.GetString(0));
+                            SQLiteList.Add(reader.GetString(row));
                         }
 
                     }
@@ -166,6 +177,47 @@ namespace From_xml__csv_to_db
                 }
             }
             return SQLiteList;
+        }
+
+        private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            tableName = listBox1.SelectedItem.ToString();
+            listBox3.Items.AddRange(SQLiteRequestToList(dbFile, $"PRAGMA table_info('{tableName}');", 1).ToArray());
+        }
+
+        private void listBox2_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.U && listBox2.SelectedIndex > 0)
+            {
+                string selectedItem = listBox2.SelectedItem.ToString();
+
+                int selectedIndex = listBox2.SelectedIndex;
+                listBox2.Items.Insert(selectedIndex - 1, selectedItem);
+
+                listBox2.SelectedIndex = selectedIndex - 1;
+
+                listBox2.Items.RemoveAt(selectedIndex + 1);
+            }
+            else if (e.KeyCode == Keys.Delete)
+            { listBox2.Items.RemoveAt(listBox2.SelectedIndex);}
+        }
+
+        private void listBox3_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.U && listBox3.SelectedIndex > 0)
+            {
+
+                string selectedItem = listBox3.SelectedItem.ToString();
+
+                int selectedIndex = listBox3.SelectedIndex;
+                listBox3.Items.Insert(selectedIndex - 1, selectedItem);
+
+                listBox3.SelectedIndex = selectedIndex - 1;
+
+                listBox3.Items.RemoveAt(selectedIndex + 1);
+            }
+            else if (e.KeyCode == Keys.Delete)
+            { listBox2.Items.RemoveAt(listBox2.SelectedIndex); }
         }
     }
 }

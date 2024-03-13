@@ -141,8 +141,12 @@ namespace From_xml__csv_to_db
                     var insertCommand = new SQLiteCommand($"INSERT INTO {tableName} ({string.Join(", ", listBox3.Items)}) VALUES ({string.Join(", ", listBox3.Items.Cast<DataColumn>().Select(c => $"@p{c.Ordinal}"))})", connection);
 
                     for (int i = 0; i < table.Columns.Count; i++)
-                    {
-                        insertCommand.Parameters.Add($"p{i}", DbType.String);
+                    {if (listBox2.Items.Contains(table.Columns[i].ColumnName))
+                        {
+                            insertCommand.Parameters.Add($"p{i}", DbType.String);
+                        }
+                    else { table.Columns.Remove(table.Columns[i].ColumnName); }
+                        
                     }
 
                     foreach (DataRow row in table.Rows)

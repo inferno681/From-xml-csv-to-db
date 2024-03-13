@@ -107,15 +107,6 @@ namespace From_xml__csv_to_db
             }
             tableNames = SQLiteRequestToList(dbFile, "SELECT name FROM sqlite_master WHERE type = 'table';");
             listBox1.Items.AddRange(tableNames.ToArray());
-
-
-
-
-
-
-
-
-            
         }
 
         private void button3_Click(object sender, EventArgs e)
@@ -138,7 +129,7 @@ namespace From_xml__csv_to_db
 
                 foreach (DataTable table in ds.Tables)
                 {
-                    var insertCommand = new SQLiteCommand($"INSERT INTO {tableName} ({string.Join(", ", listBox3.Items)}) VALUES ({string.Join(", ", listBox3.Items.Cast<DataColumn>().Select(c => $"@p{c.Ordinal}"))})", connection);
+                    var insertCommand = new SQLiteCommand($"INSERT INTO {tableName} ({string.Join(", ", listBox3.Items.Cast<string>())}) VALUES ({string.Join(", ", table.Columns.Cast<DataColumn>().Select(c => $"@p{c.Ordinal}"))})", connection);
 
                     for (int i = 0; i < table.Columns.Count; i++)
                     {if (listBox2.Items.Contains(table.Columns[i].ColumnName))

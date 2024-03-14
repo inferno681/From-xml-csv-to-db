@@ -184,9 +184,41 @@ namespace From_xml__csv_to_db
             }
             return SQLiteList;
         }
-        static DataSet collectedDataCSV_XML(string[] source, bool ProgressBar)
+        static DataSet collectedDataCSV_XML(string[] source)
         {
+            DataSet ds = new DataSet();
+            foreach (string file in source)
+            {
+                if (Path.GetExtension(file).ToLower() == ".xml")
+                {
+                    ds.ReadXml(file);
+                }
+                else if (Path.GetExtension(file).ToLower() == ".csv")
+                {
+                    DataTable table = new DataTable();
+                    using (StreamReader reader = new StreamReader(file))
+                    {
+                        string[] headers = reader.ReadLine().Split(',');
+                        foreach (string header in headers)
+                        {
+                            table.Columns.Add(header);
+                        }
 
+                        while (!reader.EndOfStream)
+                        {
+                            string[] values = reader.ReadLine().Split(',');
+                            DataRow row = table.NewRow();
+                            for (int i = 0; i < values.Length; i++)
+                            {
+                                row[i] = values[i];
+                            }
+                            table.Rows.Add(row);
+                        }
+                    }
+                    ds.Tables.Add(table);
+                }
+            }
+            return ds;
         }
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)

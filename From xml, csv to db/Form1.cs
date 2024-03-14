@@ -32,13 +32,14 @@ namespace From_xml__csv_to_db
 
         private void button1_Click(object sender, EventArgs e)
         {
+            List<string> sourceFilesShort = new List<string>();
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
                 InitialDirectory = "D:\\Dev\\db_update\\",
                 Filter = "xml files (*.xml)|*.xml|csv files (*.csv)|*.csv|All files (*.*)|*.*",
                 FilterIndex = 1,
                 RestoreDirectory = true,
-                Multiselect = true
+                Multiselect = true,
             };
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
@@ -46,9 +47,19 @@ namespace From_xml__csv_to_db
                 sourceFiles = openFileDialog.FileNames;
             }
             listBox2.Items.Clear();
+            
 
+            if (sourceFiles.Count() >5)
+            { 
+                for (int i = 0; i < 5; i++)
+                { sourceFilesShort.Add(sourceFiles[i]); }
+            }
+            else { sourceFilesShort.AddRange(sourceFiles); }
 
-            foreach (string file in sourceFiles)
+            progressBar1.Minimum = 0;
+            progressBar1.Maximum = sourceFilesShort.Count();
+
+            foreach (string file in sourceFilesShort)
             {
                 if (Path.GetExtension(file).ToLower() == ".xml")
                 {
@@ -78,14 +89,16 @@ namespace From_xml__csv_to_db
                     }
                     ds.Tables.Add(table);
                 }
-                foreach (DataTable table in ds.Tables)
+                progressBar1.PerformStep();
+            }
+            foreach (DataTable table in ds.Tables)
                 {
 
                     columnNames.AddRange(table.Columns.Cast<DataColumn>().Select(c => c.ColumnName).ToArray());
 
                 }
 
-            }
+            
             listBox2.Items.AddRange(columnNames.Distinct().ToArray());
         }
 
@@ -129,26 +142,24 @@ namespace From_xml__csv_to_db
 
                 foreach (DataTable table in ds.Tables)
                 {
-                    var insertCommand = new SQLiteCommand($"INSERT INTO {tableName} ({string.Join(", ", listBox3.Items.Cast<string>())}) VALUES ({string.Join(", ", table.Columns.Cast<DataColumn>().Select(c => $"@p{c.Ordinal}"))})", connection);
-
+                    string valInsert = "";
                     for (int i = 0; i < table.Columns.Count; i++)
                     {if (listBox2.Items.Contains(table.Columns[i].ColumnName))
                         {
-                            insertCommand.Parameters.Add($"p{i}", DbType.String);
+                            continue;
                         }
-                    else { table.Columns.Remove(table.Columns[i].ColumnName); }
-                        
+                    table.Columns.RemoveAt(i);
                     }
 
                     foreach (DataRow row in table.Rows)
                     {
-                        for (int i = 0; i < table.Columns.Count; i++)
-                        {
-                            insertCommand.Parameters[$"p{i}"].Value = row[i]?.ToString();
-                        }
+                       
+                        valInsert += "('" + string.Join("', '", row.ItemArray) + "'), ";
 
-                        insertCommand.ExecuteNonQuery();
+                    
                     }
+                    var insertCommand = new SQLiteCommand($"INSERT INTO {tableName} ({string.Join(", ", listBox3.Items.Cast<string>())}) VALUES {valInsert.Remove(valInsert.Length-2).Replace("NaN", null)}", connection);
+                    insertCommand.ExecuteNonQuery();
                 }
             }
         }
@@ -173,6 +184,10 @@ namespace From_xml__csv_to_db
             }
             return SQLiteList;
         }
+        static DataSet collectedDataCSV_XML(string[] source, bool ProgressBar)
+        {
+
+        }
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -180,22 +195,6 @@ namespace From_xml__csv_to_db
             listBox3.Items.AddRange(SQLiteRequestToList(dbFile, $"PRAGMA table_info('{tableName}');", 1).ToArray());
         }
 
-        private void listBox2_KeyUp(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.U && listBox2.SelectedIndex > 0)
-            {
-                string selectedItem = listBox2.SelectedItem.ToString();
-
-                int selectedIndex = listBox2.SelectedIndex;
-                listBox2.Items.Insert(selectedIndex - 1, selectedItem);
-
-                listBox2.SelectedIndex = selectedIndex - 1;
-
-                listBox2.Items.RemoveAt(selectedIndex + 1);
-            }
-            else if (e.KeyCode == Keys.Delete)
-            { listBox2.Items.RemoveAt(listBox2.SelectedIndex);}
-        }
 
         private void listBox3_KeyUp(object sender, KeyEventArgs e)
         {
@@ -212,7 +211,7 @@ namespace From_xml__csv_to_db
                 listBox3.Items.RemoveAt(selectedIndex + 1);
             }
             else if (e.KeyCode == Keys.Delete)
-            { listBox2.Items.RemoveAt(listBox2.SelectedIndex); }
+            { listBox3.Items.RemoveAt(listBox3.SelectedIndex); }
         }
     }
 }

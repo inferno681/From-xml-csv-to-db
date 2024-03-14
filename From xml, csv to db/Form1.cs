@@ -56,41 +56,7 @@ namespace From_xml__csv_to_db
             }
             else { sourceFilesShort.AddRange(sourceFiles); }
 
-            progressBar1.Minimum = 0;
-            progressBar1.Maximum = sourceFilesShort.Count();
-
-            foreach (string file in sourceFilesShort)
-            {
-                if (Path.GetExtension(file).ToLower() == ".xml")
-                {
-                    ds.ReadXml(file);
-                }
-                else if (Path.GetExtension(file).ToLower() == ".csv")
-                {
-                    DataTable table = new DataTable();
-                    using (StreamReader reader = new StreamReader(file))
-                    {
-                        string[] headers = reader.ReadLine().Split(',');
-                        foreach (string header in headers)
-                        {
-                            table.Columns.Add(header);
-                        }
-
-                        while (!reader.EndOfStream)
-                        {
-                            string[] values = reader.ReadLine().Split(',');
-                            DataRow row = table.NewRow();
-                            for (int i = 0; i < values.Length; i++)
-                            {
-                                row[i] = values[i];
-                            }
-                            table.Rows.Add(row);
-                        }
-                    }
-                    ds.Tables.Add(table);
-                }
-                progressBar1.PerformStep();
-            }
+            ds = collectedDataCSV_XML(sourceFilesShort.ToArray(), true, progressBar1);
             foreach (DataTable table in ds.Tables)
                 {
 
@@ -134,34 +100,28 @@ namespace From_xml__csv_to_db
                 MessageBox.Show("Please select db file first.");
                 return;
             }
-
-
-            using (var connection = new SQLiteConnection($"Data Source={dbFile};Version=3;"))
+            List<string> sourceFilesShort = new List<string>();
+            if (sourceFiles.Count() <= 5)
             {
-                connection.Open();
-
-                foreach (DataTable table in ds.Tables)
-                {
-                    string valInsert = "";
-                    for (int i = 0; i < table.Columns.Count; i++)
-                    {if (listBox2.Items.Contains(table.Columns[i].ColumnName))
-                        {
-                            continue;
-                        }
-                    table.Columns.RemoveAt(i);
-                    }
-
-                    foreach (DataRow row in table.Rows)
-                    {
-                       
-                        valInsert += "('" + string.Join("', '", row.ItemArray) + "'), ";
-
-                    
-                    }
-                    var insertCommand = new SQLiteCommand($"INSERT INTO {tableName} ({string.Join(", ", listBox3.Items.Cast<string>())}) VALUES {valInsert.Remove(valInsert.Length-2).Replace("NaN", null)}", connection);
-                    insertCommand.ExecuteNonQuery();
-                }
+                ds = collectedDataCSV_XML(sourceFiles, true, progressBar2);
+                SQLiteInsert(dbFile, ds, tableName, listBox2, listBox3, true, progressBar3);
             }
+            else 
+            {
+                for (int i = 0; i < sourceFiles.Count(); i++)
+                {
+                    sourceFilesShort.Add(sourceFiles[i]);
+                    if (i % 5 == 0)
+                    {
+                        ds = collectedDataCSV_XML(sourceFilesShort.ToArray(), true, progressBar2);
+                        SQLiteInsert(dbFile, ds, tableName, listBox2, listBox3, true, progressBar3);
+                        sourceFilesShort.Clear();
+                    }
+                    else if (i > sourceFiles.Count() / 5 )
+
+                }
+             }
+            
         }
         static List<string> SQLiteRequestToList(string dataBase, string SQLRequest, int row = 0)
         {
@@ -184,8 +144,14 @@ namespace From_xml__csv_to_db
             }
             return SQLiteList;
         }
-        static DataSet collectedDataCSV_XML(string[] source)
+        static DataSet collectedDataCSV_XML(string[] source, bool isProgressBar = false, ProgressBar progressBar = null)
         {
+            if (isProgressBar)
+            {
+                progressBar.Minimum = 0;
+                progressBar.Maximum = source.Count();
+            }
+
             DataSet ds = new DataSet();
             foreach (string file in source)
             {
@@ -218,7 +184,50 @@ namespace From_xml__csv_to_db
                     ds.Tables.Add(table);
                 }
             }
+            if (isProgressBar)
+            {
+                progressBar.PerformStep();
+            }
             return ds;
+        }
+        static void SQLiteInsert(string db, DataSet source, string tableName, ListBox listBoxDS, ListBox listBoxDB, bool isProgressBar = false, ProgressBar progressBar = null)
+        {
+            if (isProgressBar)
+            {
+                progressBar.Minimum = 0;
+                progressBar.Maximum = source.Tables.Count;
+            }
+            using (var connection = new SQLiteConnection($"Data Source={db};Version=3;"))
+            {
+                connection.Open();
+
+                foreach (DataTable table in source.Tables)
+                {
+                    string valInsert = "";
+                    for (int i = 0; i < table.Columns.Count; i++)
+                    {
+                        if (listBoxDS.Items.Contains(table.Columns[i].ColumnName))
+                        {
+                            continue;
+                        }
+                        table.Columns.RemoveAt(i);
+                    }
+
+                    foreach (DataRow row in table.Rows)
+                    {
+
+                        valInsert += "('" + string.Join("', '", row.ItemArray) + "'), ";
+
+
+                    }
+                    var insertCommand = new SQLiteCommand($"INSERT INTO {tableName} ({string.Join(", ", listBoxDB.Items.Cast<string>())}) VALUES {valInsert.Remove(valInsert.Length - 2).Replace("NaN", null)}", connection);
+                    insertCommand.ExecuteNonQuery();
+                    if (isProgressBar)
+                    {
+                        progressBar.PerformStep();
+                    }
+                }
+            }
         }
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)

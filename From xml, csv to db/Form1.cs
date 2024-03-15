@@ -25,9 +25,14 @@ namespace From_xml__csv_to_db
         List<string> columnNames = new List<string>();
         List<string> tableNames = new List<string>();
         DataSet ds = new DataSet();
+        private Stopwatch stopwatch;
+        private DateTime startTime;
         public Form1()
         {
             InitializeComponent();
+            stopwatch = new Stopwatch();
+            timer1.Interval = 100;
+            timer1.Tick += timer1_Tick;
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -46,6 +51,7 @@ namespace From_xml__csv_to_db
             {
                 sourceFiles = openFileDialog.FileNames;
             }
+            else { return; }
             listBox2.Items.Clear();
             
 
@@ -100,11 +106,16 @@ namespace From_xml__csv_to_db
                 MessageBox.Show("Please select db file first.");
                 return;
             }
+            startTime = DateTime.Now;
+            stopwatch.Start();
+            progressBar4.Minimum = 0;
+            progressBar4.Maximum = sourceFiles.Count();
             List<string> sourceFilesShort = new List<string>();
             if (sourceFiles.Count() <= 5)
             {
                 ds = collectedDataCSV_XML(sourceFiles, true, progressBar2);
-                SQLiteInsert(dbFile, ds, tableName, listBox2, listBox3, true, progressBar3);
+                SQLiteInsertAsync(dbFile, ds, tableName, listBox2, listBox3, true, progressBar3);
+                progressBar4.PerformStep();
             }
             else 
             {
@@ -114,14 +125,22 @@ namespace From_xml__csv_to_db
                     if (i % 5 == 0)
                     {
                         ds = collectedDataCSV_XML(sourceFilesShort.ToArray(), true, progressBar2);
-                        SQLiteInsert(dbFile, ds, tableName, listBox2, listBox3, true, progressBar3);
+                        SQLiteInsertAsync(dbFile, ds, tableName, listBox2, listBox3, true, progressBar3);
                         sourceFilesShort.Clear();
                     }
-                    else if (i > sourceFiles.Count() / 5 )
-
+                    else if (i > (sourceFiles.Count() / 5) * 5 && i == sourceFiles.Count() )
+                    {
+                        ds = collectedDataCSV_XML(sourceFilesShort.ToArray(), true, progressBar2);
+                        SQLiteInsertAsync(dbFile, ds, tableName, listBox2, listBox3, true, progressBar3);
+                        sourceFilesShort.Clear();
+                    }
+                    progressBar4.PerformStep();
                 }
              }
-            
+            stopwatch.Stop();
+            TimeSpan elapsedTime = stopwatch.Elapsed;
+            label1.Text = $"Elapsed time: {elapsedTime.TotalSeconds} seconds";
+
         }
         static List<string> SQLiteRequestToList(string dataBase, string SQLRequest, int row = 0)
         {
@@ -183,11 +202,12 @@ namespace From_xml__csv_to_db
                     }
                     ds.Tables.Add(table);
                 }
+                if (isProgressBar)
+                {
+                    progressBar.PerformStep();
+                }
             }
-            if (isProgressBar)
-            {
-                progressBar.PerformStep();
-            }
+            
             return ds;
         }
         static void SQLiteInsert(string db, DataSet source, string tableName, ListBox listBoxDS, ListBox listBoxDB, bool isProgressBar = false, ProgressBar progressBar = null)
@@ -203,37 +223,40 @@ namespace From_xml__csv_to_db
 
                 foreach (DataTable table in source.Tables)
                 {
-                    string valInsert = "";
                     for (int i = 0; i < table.Columns.Count; i++)
                     {
                         if (listBoxDS.Items.Contains(table.Columns[i].ColumnName))
                         {
                             continue;
                         }
-                        table.Columns.RemoveAt(i);
+                        else
+                        {
+                            table.Columns.RemoveAt(i);
+                        }
                     }
 
-                    foreach (DataRow row in table.Rows)
-                    {
 
-                        valInsert += "('" + string.Join("', '", row.ItemArray) + "'), ";
-
-
-                    }
-                    var insertCommand = new SQLiteCommand($"INSERT INTO {tableName} ({string.Join(", ", listBoxDB.Items.Cast<string>())}) VALUES {valInsert.Remove(valInsert.Length - 2).Replace("NaN", null)}", connection);
+                    var values = table.Rows.Cast<DataRow>().Select(row => $"('{string.Join("', '", row.ItemArray.Select(item => item.ToString().Replace("NaN", null)))}')");
+                    var insertCommand = new SQLiteCommand($"INSERT INTO {tableName} ({string.Join(", ", listBoxDB.Items.Cast<string>())}) VALUES {string.Join(", ", values)}", connection);
                     insertCommand.ExecuteNonQuery();
+                    
                     if (isProgressBar)
                     {
                         progressBar.PerformStep();
                     }
                 }
             }
+
         }
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            tableName = listBox1.SelectedItem.ToString();
-            listBox3.Items.AddRange(SQLiteRequestToList(dbFile, $"PRAGMA table_info('{tableName}');", 1).ToArray());
+            if (listBox1.SelectedItem != null)
+            {
+                listBox3.Items.Clear();
+                tableName = listBox1.SelectedItem.ToString();
+                listBox3.Items.AddRange(SQLiteRequestToList(dbFile, $"PRAGMA table_info('{tableName}');", 1).ToArray());
+            }
         }
 
 
@@ -253,6 +276,55 @@ namespace From_xml__csv_to_db
             }
             else if (e.KeyCode == Keys.Delete)
             { listBox3.Items.RemoveAt(listBox3.SelectedIndex); }
+        }
+
+        private void listBox2_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Delete)
+            { listBox2.Items.RemoveAt(listBox2.SelectedIndex); }
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            TimeSpan elapsedTime = stopwatch.Elapsed;
+            label1.Text = $"Elapsed time: {elapsedTime.TotalSeconds} seconds";
+        }
+        static async Task SQLiteInsertAsync(string db, DataSet source, string tableName, ListBox listBoxDS, ListBox listBoxDB, bool isProgressBar = false, ProgressBar progressBar = null)
+        {
+            if (isProgressBar)
+            {
+                progressBar.Minimum = 0;
+                progressBar.Maximum = source.Tables.Count;
+            }
+            using (var connection = new SQLiteConnection($"Data Source={db};Version=3;"))
+            {
+                await connection.OpenAsync();
+
+                foreach (DataTable table in source.Tables)
+                {
+                    for (int i = 0; i < table.Columns.Count; i++)
+                    {
+                        if (listBoxDS.Items.Contains(table.Columns[i].ColumnName))
+                        {
+                      continue;
+                        }
+                        else
+                        {
+                            table.Columns.RemoveAt(i);
+                        }
+                    }
+
+                    var values = table.Rows.Cast<DataRow>().Select(row => $"('{string.Join("', '", row.ItemArray.Select(item => item.ToString().Replace("NaN", null)))}')");
+
+                    var insertCommand = new SQLiteCommand($"INSERT INTO {tableName} ({string.Join(", ", listBoxDB.Items.Cast<string>())}) VALUES {string.Join(", ", values)}", connection);
+                    await insertCommand.ExecuteNonQueryAsync();
+
+                    if (isProgressBar)
+                    {
+                        progressBar.PerformStep();
+                    }
+                }
+            }
         }
     }
 }

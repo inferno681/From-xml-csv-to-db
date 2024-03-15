@@ -22,7 +22,6 @@ namespace From_xml__csv_to_db
         string[] sourceFiles;
         string dbFile;
         string tableName;
-        List<string> columnNames = new List<string>();
         List<string> tableNames = new List<string>();
         DataSet ds = new DataSet();
         private Stopwatch stopwatch;
@@ -38,6 +37,7 @@ namespace From_xml__csv_to_db
         private void button1_Click(object sender, EventArgs e)
         {
             List<string> sourceFilesShort = new List<string>();
+            List<string> columnNames = new List<string>();
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
                 InitialDirectory = "D:\\Dev\\db_update\\",
@@ -114,7 +114,7 @@ namespace From_xml__csv_to_db
             if (sourceFiles.Count() <= 5)
             {
                 ds = collectedDataCSV_XML(sourceFiles, true, progressBar2);
-                SQLiteInsertAsync(dbFile, ds, tableName, listBox2, listBox3, true, progressBar3);
+                _ = SQLiteInsertAsync(dbFile, ds, tableName, listBox2, listBox3, true, progressBar3);
                 progressBar4.PerformStep();
             }
             else 
@@ -125,13 +125,13 @@ namespace From_xml__csv_to_db
                     if (i % 5 == 0)
                     {
                         ds = collectedDataCSV_XML(sourceFilesShort.ToArray(), true, progressBar2);
-                        SQLiteInsertAsync(dbFile, ds, tableName, listBox2, listBox3, true, progressBar3);
+                        _ = SQLiteInsertAsync(dbFile, ds, tableName, listBox2, listBox3, true, progressBar3);
                         sourceFilesShort.Clear();
                     }
                     else if (i > (sourceFiles.Count() / 5) * 5 && i == sourceFiles.Count() )
                     {
                         ds = collectedDataCSV_XML(sourceFilesShort.ToArray(), true, progressBar2);
-                        SQLiteInsertAsync(dbFile, ds, tableName, listBox2, listBox3, true, progressBar3);
+                        _ = SQLiteInsertAsync(dbFile, ds, tableName, listBox2, listBox3, true, progressBar3);
                         sourceFilesShort.Clear();
                     }
                     progressBar4.PerformStep();
@@ -210,44 +210,7 @@ namespace From_xml__csv_to_db
             
             return ds;
         }
-        static void SQLiteInsert(string db, DataSet source, string tableName, ListBox listBoxDS, ListBox listBoxDB, bool isProgressBar = false, ProgressBar progressBar = null)
-        {
-            if (isProgressBar)
-            {
-                progressBar.Minimum = 0;
-                progressBar.Maximum = source.Tables.Count;
-            }
-            using (var connection = new SQLiteConnection($"Data Source={db};Version=3;"))
-            {
-                connection.Open();
-
-                foreach (DataTable table in source.Tables)
-                {
-                    for (int i = 0; i < table.Columns.Count; i++)
-                    {
-                        if (listBoxDS.Items.Contains(table.Columns[i].ColumnName))
-                        {
-                            continue;
-                        }
-                        else
-                        {
-                            table.Columns.RemoveAt(i);
-                        }
-                    }
-
-
-                    var values = table.Rows.Cast<DataRow>().Select(row => $"('{string.Join("', '", row.ItemArray.Select(item => item.ToString().Replace("NaN", null)))}')");
-                    var insertCommand = new SQLiteCommand($"INSERT INTO {tableName} ({string.Join(", ", listBoxDB.Items.Cast<string>())}) VALUES {string.Join(", ", values)}", connection);
-                    insertCommand.ExecuteNonQuery();
-                    
-                    if (isProgressBar)
-                    {
-                        progressBar.PerformStep();
-                    }
-                }
-            }
-
-        }
+        
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -326,5 +289,43 @@ namespace From_xml__csv_to_db
                 }
             }
         }
+        //static void SQLiteInsert(string db, DataSet source, string tableName, ListBox listBoxDS, ListBox listBoxDB, bool isProgressBar = false, ProgressBar progressBar = null)
+        //{
+        //    if (isProgressBar)
+        //    {
+        //        progressBar.Minimum = 0;
+        //        progressBar.Maximum = source.Tables.Count;
+        //    }
+        //    using (var connection = new SQLiteConnection($"Data Source={db};Version=3;"))
+        //    {
+        //        connection.Open();
+
+        //        foreach (DataTable table in source.Tables)
+        //        {
+        //            for (int i = 0; i < table.Columns.Count; i++)
+        //            {
+        //                if (listBoxDS.Items.Contains(table.Columns[i].ColumnName))
+        //                {
+        //                    continue;
+        //                }
+        //                else
+        //                {
+        //                    table.Columns.RemoveAt(i);
+        //                }
+        //            }
+
+
+        //            var values = table.Rows.Cast<DataRow>().Select(row => $"('{string.Join("', '", row.ItemArray.Select(item => item.ToString().Replace("NaN", null)))}')");
+        //            var insertCommand = new SQLiteCommand($"INSERT INTO {tableName} ({string.Join(", ", listBoxDB.Items.Cast<string>())}) VALUES {string.Join(", ", values)}", connection);
+        //            insertCommand.ExecuteNonQuery();
+
+        //            if (isProgressBar)
+        //            {
+        //                progressBar.PerformStep();
+        //            }
+        //        }
+        //    }
+
+        //}
     }
 }

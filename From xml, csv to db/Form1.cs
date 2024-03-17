@@ -52,7 +52,6 @@ namespace From_xml__csv_to_db
                 { sourceFilesShort.Add(sourceFiles[i]); }
             }
             else { sourceFilesShort.AddRange(sourceFiles); }
-
             ds = await CollectedDataCSV_XMLAsync(sourceFilesShort.ToArray(), true, progressBar1);
             foreach (DataTable table in ds.Tables)
             {
@@ -63,6 +62,8 @@ namespace From_xml__csv_to_db
 
 
             listBox2.Items.AddRange(columnNames.Distinct().ToArray());
+
+            label2.Text = $"Selected {sourceFiles.Length} files";
         }
 
         private void Button2_Click(object sender, EventArgs e)
@@ -74,7 +75,7 @@ namespace From_xml__csv_to_db
                 FilterIndex = 1,
                 RestoreDirectory = true,
                 Multiselect = false,
-                CheckFileExists= true,
+                CheckFileExists = true,
             };
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)

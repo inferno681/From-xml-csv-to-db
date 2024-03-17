@@ -122,6 +122,7 @@ namespace From_xml__csv_to_db
                         ds = await CollectedDataCSV_XMLAsync(sourceFilesShort.ToArray());
                         await SQLiteInsertAsync(dbFile, ds, tableName, listBox2, listBox3);
                         sourceFilesShort.Clear();
+                        Application.DoEvents();
                     }
                     else if (i > (sourceFiles.Count() / 5) * 5 && i == sourceFiles.Count())
                     {
@@ -136,7 +137,6 @@ namespace From_xml__csv_to_db
             TimeSpan elapsedTime = stopwatch.Elapsed;
             label1.Text = $"Elapsed time: {elapsedTime.TotalSeconds} seconds";
             stopwatch.Reset();
-
         }
         static List<string> SQLiteRequestToList(string dataBase, string SQLRequest, int row = 0)
         {
@@ -258,7 +258,7 @@ namespace From_xml__csv_to_db
             using (var connection = new SQLiteConnection($"Data Source={db};Version=3;"))
             {
                 await connection.OpenAsync();
-
+              
                 foreach (DataTable table in source.Tables)
                 {
                     for (int i = 0; i < table.Columns.Count; i++)

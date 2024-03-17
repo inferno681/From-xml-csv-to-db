@@ -17,17 +17,14 @@ namespace From_xml__csv_to_db
         string tableName;
         List<string> tableNames = new List<string>();
         DataSet ds = new DataSet();
-        private Stopwatch stopwatch;
-        private DateTime startTime;
+        private readonly Stopwatch stopwatch = new Stopwatch();
+
         public Form1()
         {
             InitializeComponent();
-            stopwatch = new Stopwatch();
-            timer1.Interval = 100;
-            timer1.Tick += timer1_Tick;
         }
 
-        private async void button1_Click(object sender, EventArgs e)
+        private async void Button1_Click(object sender, EventArgs e)
         {
             List<string> sourceFilesShort = new List<string>();
             List<string> columnNames = new List<string>();
@@ -67,7 +64,7 @@ namespace From_xml__csv_to_db
             listBox2.Items.AddRange(columnNames.Distinct().ToArray());
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void Button2_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
@@ -87,7 +84,7 @@ namespace From_xml__csv_to_db
             listBox1.Items.AddRange(tableNames.ToArray());
         }
 
-        private async void button3_Click(object sender, EventArgs e)
+        private async void Button3_Click(object sender, EventArgs e)
         {
             if (sourceFiles == null || sourceFiles.Length == 0)
             {
@@ -99,7 +96,6 @@ namespace From_xml__csv_to_db
                 MessageBox.Show("Please select db file first.");
                 return;
             }
-            startTime = DateTime.Now;
             stopwatch.Start();
             progressBar4.Minimum = 0;
             progressBar4.Maximum = sourceFiles.Count();
@@ -135,6 +131,7 @@ namespace From_xml__csv_to_db
             stopwatch.Stop();
             TimeSpan elapsedTime = stopwatch.Elapsed;
             label1.Text = $"Elapsed time: {elapsedTime.TotalSeconds} seconds";
+            stopwatch.Reset();
 
         }
         static List<string> SQLiteRequestToList(string dataBase, string SQLRequest, int row = 0)
@@ -207,58 +204,10 @@ namespace From_xml__csv_to_db
 
             return ds;
         }
-        static DataSet collectedDataCSV_XML(string[] source, bool isProgressBar = false, System.Windows.Forms.ProgressBar progressBar = null)
-        {
-            if (isProgressBar)
-            {
-                progressBar.Minimum = 0;
-                progressBar.Maximum = source.Count();
-                progressBar.Value = 0;
-                progressBar.Step = 1;
-            }
-
-            DataSet ds = new DataSet();
-            foreach (string file in source)
-            {
-                if (Path.GetExtension(file).ToLower() == ".xml")
-                {
-                    ds.ReadXml(file);
-                }
-                else if (Path.GetExtension(file).ToLower() == ".csv")
-                {
-                    DataTable table = new DataTable();
-                    using (StreamReader reader = new StreamReader(file))
-                    {
-                        string[] headers = reader.ReadLine().Split(',');
-                        foreach (string header in headers)
-                        {
-                            table.Columns.Add(header);
-                        }
-
-                        while (!reader.EndOfStream)
-                        {
-                            string[] values = reader.ReadLine().Split(',');
-                            DataRow row = table.NewRow();
-                            for (int i = 0; i < values.Length; i++)
-                            {
-                                row[i] = values[i];
-                            }
-                            table.Rows.Add(row);
-                        }
-                    }
-                    ds.Tables.Add(table);
-                }
-                if (isProgressBar)
-                {
-                    progressBar.PerformStep();
-                }
-            }
-
-            return ds;
-        }
 
 
-        private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
+
+        private void ListBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (listBox1.SelectedItem != null)
             {
@@ -269,7 +218,7 @@ namespace From_xml__csv_to_db
         }
 
 
-        private void listBox3_KeyUp(object sender, KeyEventArgs e)
+        private void ListBox3_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.U && listBox3.SelectedIndex > 0)
             {
@@ -287,17 +236,12 @@ namespace From_xml__csv_to_db
             { listBox3.Items.RemoveAt(listBox3.SelectedIndex); }
         }
 
-        private void listBox2_KeyUp(object sender, KeyEventArgs e)
+        private void ListBox2_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Delete)
             { listBox2.Items.RemoveAt(listBox2.SelectedIndex); }
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            TimeSpan elapsedTime = stopwatch.Elapsed;
-            label1.Text = $"Elapsed time: {elapsedTime.TotalSeconds} seconds";
-        }
         static async Task SQLiteInsertAsync(string db, DataSet source, string tableName, ListBox listBoxDS, ListBox listBoxDB, bool isProgressBar = false, System.Windows.Forms.ProgressBar progressBar = null)
         {
             if (isProgressBar)
@@ -376,5 +320,55 @@ namespace From_xml__csv_to_db
         //    }
 
         //}
+        //static DataSet collectedDataCSV_XML(string[] source, bool isProgressBar = false, System.Windows.Forms.ProgressBar progressBar = null)
+        //{
+        //    if (isProgressBar)
+        //    {
+        //        progressBar.Minimum = 0;
+        //        progressBar.Maximum = source.Count();
+        //        progressBar.Value = 0;
+        //        progressBar.Step = 1;
+        //    }
+
+        //    DataSet ds = new DataSet();
+        //    foreach (string file in source)
+        //    {
+        //        if (Path.GetExtension(file).ToLower() == ".xml")
+        //        {
+        //            ds.ReadXml(file);
+        //        }
+        //        else if (Path.GetExtension(file).ToLower() == ".csv")
+        //        {
+        //            DataTable table = new DataTable();
+        //            using (StreamReader reader = new StreamReader(file))
+        //            {
+        //                string[] headers = reader.ReadLine().Split(',');
+        //                foreach (string header in headers)
+        //                {
+        //                    table.Columns.Add(header);
+        //                }
+
+        //                while (!reader.EndOfStream)
+        //                {
+        //                    string[] values = reader.ReadLine().Split(',');
+        //                    DataRow row = table.NewRow();
+        //                    for (int i = 0; i < values.Length; i++)
+        //                    {
+        //                        row[i] = values[i];
+        //                    }
+        //                    table.Rows.Add(row);
+        //                }
+        //            }
+        //            ds.Tables.Add(table);
+        //        }
+        //        if (isProgressBar)
+        //        {
+        //            progressBar.PerformStep();
+        //        }
+        //    }
+
+        //    return ds;
+        //}
     }
+
 }

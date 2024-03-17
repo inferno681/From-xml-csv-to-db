@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
@@ -38,7 +37,6 @@
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.progressBar4 = new System.Windows.Forms.ProgressBar();
             this.label1 = new System.Windows.Forms.Label();
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // button1
@@ -50,7 +48,7 @@
             this.button1.TabIndex = 0;
             this.button1.Text = "Source";
             this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.button1.Click += new System.EventHandler(this.Button1_Click);
             // 
             // button2
             // 
@@ -61,7 +59,7 @@
             this.button2.TabIndex = 1;
             this.button2.Text = "db file";
             this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
+            this.button2.Click += new System.EventHandler(this.Button2_Click);
             // 
             // button3
             // 
@@ -72,7 +70,7 @@
             this.button3.TabIndex = 2;
             this.button3.Text = "Start";
             this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.button3_Click);
+            this.button3.Click += new System.EventHandler(this.Button3_Click);
             // 
             // listBox1
             // 
@@ -83,7 +81,7 @@
             this.listBox1.Name = "listBox1";
             this.listBox1.Size = new System.Drawing.Size(152, 84);
             this.listBox1.TabIndex = 6;
-            this.listBox1.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
+            this.listBox1.SelectedIndexChanged += new System.EventHandler(this.ListBox1_SelectedIndexChanged);
             // 
             // listBox2
             // 
@@ -94,7 +92,7 @@
             this.listBox2.Name = "listBox2";
             this.listBox2.Size = new System.Drawing.Size(171, 196);
             this.listBox2.TabIndex = 7;
-            this.listBox2.KeyUp += new System.Windows.Forms.KeyEventHandler(this.listBox2_KeyUp);
+            this.listBox2.KeyUp += new System.Windows.Forms.KeyEventHandler(this.ListBox2_KeyUp);
             // 
             // listBox3
             // 
@@ -105,7 +103,7 @@
             this.listBox3.Name = "listBox3";
             this.listBox3.Size = new System.Drawing.Size(189, 196);
             this.listBox3.TabIndex = 8;
-            this.listBox3.KeyUp += new System.Windows.Forms.KeyEventHandler(this.listBox3_KeyUp);
+            this.listBox3.KeyUp += new System.Windows.Forms.KeyEventHandler(this.ListBox3_KeyUp);
             // 
             // progressBar1
             // 
@@ -131,10 +129,6 @@
             this.label1.Size = new System.Drawing.Size(44, 16);
             this.label1.TabIndex = 13;
             this.label1.Text = "label1";
-            // 
-            // timer1
-            // 
-            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // Form1
             // 
@@ -169,7 +163,6 @@
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.ProgressBar progressBar4;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Timer timer1;
 
     }
 }

@@ -35,6 +35,7 @@ namespace From_xml__csv_to_db
                 FilterIndex = 1,
                 RestoreDirectory = true,
                 Multiselect = true,
+                CheckFileExists = true,
             };
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
@@ -72,7 +73,8 @@ namespace From_xml__csv_to_db
                 Filter = "sqlite files (*.db)|*.db|All files (*.*)|*.*",
                 FilterIndex = 1,
                 RestoreDirectory = true,
-                Multiselect = false
+                Multiselect = false,
+                CheckFileExists= true,
             };
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
@@ -80,6 +82,7 @@ namespace From_xml__csv_to_db
                 listBox1.Items.Clear();
                 dbFile = openFileDialog.FileName;
             }
+            else { return; }
             tableNames = SQLiteRequestToList(dbFile, "SELECT name FROM sqlite_master WHERE type = 'table';");
             listBox1.Items.AddRange(tableNames.ToArray());
         }

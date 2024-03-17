@@ -36,8 +36,6 @@
             this.listBox2 = new System.Windows.Forms.ListBox();
             this.listBox3 = new System.Windows.Forms.ListBox();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
-            this.progressBar2 = new System.Windows.Forms.ProgressBar();
-            this.progressBar3 = new System.Windows.Forms.ProgressBar();
             this.progressBar4 = new System.Windows.Forms.ProgressBar();
             this.label1 = new System.Windows.Forms.Label();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
@@ -117,28 +115,12 @@
             this.progressBar1.Size = new System.Drawing.Size(172, 23);
             this.progressBar1.TabIndex = 9;
             // 
-            // progressBar2
-            // 
-            this.progressBar2.Location = new System.Drawing.Point(433, 305);
-            this.progressBar2.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.progressBar2.Name = "progressBar2";
-            this.progressBar2.Size = new System.Drawing.Size(85, 23);
-            this.progressBar2.TabIndex = 10;
-            // 
-            // progressBar3
-            // 
-            this.progressBar3.Location = new System.Drawing.Point(524, 305);
-            this.progressBar3.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.progressBar3.Name = "progressBar3";
-            this.progressBar3.Size = new System.Drawing.Size(100, 23);
-            this.progressBar3.TabIndex = 11;
-            // 
             // progressBar4
             // 
-            this.progressBar4.Location = new System.Drawing.Point(433, 343);
+            this.progressBar4.Location = new System.Drawing.Point(28, 271);
             this.progressBar4.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.progressBar4.Name = "progressBar4";
-            this.progressBar4.Size = new System.Drawing.Size(189, 23);
+            this.progressBar4.Size = new System.Drawing.Size(594, 23);
             this.progressBar4.TabIndex = 12;
             // 
             // label1
@@ -158,11 +140,9 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(665, 450);
+            this.ClientSize = new System.Drawing.Size(665, 347);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.progressBar4);
-            this.Controls.Add(this.progressBar3);
-            this.Controls.Add(this.progressBar2);
             this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.listBox3);
             this.Controls.Add(this.listBox2);
@@ -187,11 +167,10 @@
         private System.Windows.Forms.ListBox listBox2;
         private System.Windows.Forms.ListBox listBox3;
         private System.Windows.Forms.ProgressBar progressBar1;
-        private System.Windows.Forms.ProgressBar progressBar2;
-        private System.Windows.Forms.ProgressBar progressBar3;
         private System.Windows.Forms.ProgressBar progressBar4;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Timer timer1;
+
     }
 }
 

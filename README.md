@@ -3,7 +3,6 @@
 ![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
 ![System.Data.SQLite](https://img.shields.io/nuget/dt/System.Data.SQLite?style=for-the-badge&logo=System.Data.SQLite&label=System.Data.SQLite)
 
-<details><summary><h1>СProgramm for datatransfer from xml, csv files to SQLite data base</h1></summary>
 ## Description:
 Programm for datatransfer from xml, csv files to SQLite data base
 
